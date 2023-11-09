@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Travolgi">
+	<link rel="icon" href="https://travolgi.it/favicon.ico" />
+	<title>Vue Movies app</title>
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="css/style.css">
+	<script src="js/vue.js"></script>
+</head>
+<body>
+
+	<div id="vue-container">
+		<header>
+			<a href="/">
+				<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg" class="logo" alt="Vue logo">
+			</a>
+			<input v-model.trim="query" v-on:keyup.enter="runQuery" placeholder="Search Movies and Series">
+			<nav>
+				<div id="toggleNav"></div>
+			</nav>
+			<div class="login">
+				<a href="javascript:void(0)">Login</a>
+				<a href="javascript:void(0)">Sign Up</a>
+			</div>
+		</header>
+
+		<div class="sidebar">
+			<ul>
+				<li v-on:click="startMovie">Home</li>
+				<li>Saved movies
+					<ul id="saved">
+						<li><small>{{ data.saved.length }} Saved</small></li>
+						<li v-for="movieSaved in data.saved" :key="movieSaved.id">
+							<span :data-id="clearIdMovie(movieSaved.id)" v-on:click="removeSavedMovie"></span>
+							{{ movieSaved.title }}
+						</li>
+						<li class="see-all-saved" v-if="data.saved.length !== 0" v-on:click="seeAllSaved">See all saved</li>
+					</ul>
+				</li>
+				<li>
+					<label class="switch">
+						<input type="checkbox" v-on:click="toggleMode" checked>
+						<span class="slide-mode"></span>
+					</label>
+					<small class="labelmode">Dark mode</small>
+				</li>
+			</ul>
+			<small>
+				Developed by <a href="https://travolgi.it" target="_blank" rel="noopener noreferrer">Travolgi</a>
+				<br>
+				Source data: <a href="https://rapidapi.com/apidojo/api/imdb8/" target="_blank" rel="noopener noreferrer">RapidAPI</a>
+			</small>
+		</div>
+
+		<div class="container">
+			<section>
+				<h1 class="title">{{ title }}</h1>
+				<p>Have been found {{ data.movies.length }} results.</p>
+				<label for="orderBy">Order by:</label>
+				<select name="orderBy" id="orderBy" v-model="orderBy" v-on:change="orderByVal">
+					<option value="date90">Date 9-0</option>
+					<option value="date09">Date 0-9</option>
+					<option value="nameAZ">Name A-Z</option>
+					<option value="nameZA">Name Z-A</option>
+				</select>
+			</section>
+
+			<section class="grid-cards">
+				<div class="single-card" v-for="movie in data.movies" :key="movie.id">
+					<div class="card-img">
+						<img :src="movie.image && movie.image.url" loading="lazy" :alt="movie.title">
+					</div>
+
+					<div class="info-card">
+						<h1>{{ movie.title }}</h1>
+						<p><i>{{ movie.titleType }}</i></p>
+						<p>{{ movie.year }}</p>
+						<button v-if="title === 'Saved Movies'" :id="clearIdMovie(movie.id)" :key="'tt'+clearIdMovie(movie.id)" v-on:click="getDetails">See details</button>
+						<button v-else :id="clearIdMovie(movie.id)" :value="movie.title" :key="movie.id" v-on:click="saveMovie">Save Movie</button>
+					</div>
+				</div>
+			</section>
+
+			<small class="d-sm">
+				Developed by <a href="https://travolgi.it" target="_blank" rel="noopener noreferrer">Travolgi</a>
+				<br>
+				Source data: <a href="https://rapidapi.com/apidojo/api/imdb8/" target="_blank" rel="noopener noreferrer">RapidAPI</a>
+			</small>
+			<div id="goTop" v-on:click="scrollTopOn">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 450"><path d="M168.5 164.2l148 146.8c4.7 4.7 4.7 12.3 0 17l-19.8 19.8c-4.7 4.7-12.3 4.7-17 0L160 229.3 40.3 347.8c-4.7 4.7-12.3 4.7-17 0L3.5 328c-4.7-4.7-4.7-12.3 0-17l148-146.8c4.7-4.7 12.3-4.7 17 0z"></path></svg>
+			</div>
+		</div>
+
+		<div id="modal" v-if="showModal" v-on:click.self="showModal=false">
+			<div class="modal-box">
+				<img :src="data.details.title && data.details.title.image && data.details.title.image.url" loading="lazy" :alt="data.details.title && data.details.title.title">
+				<div class="modal-content">
+					<h1>{{ data.details.title && data.details.title.title }}</h1>
+					<p>
+						<i>{{ data.details.title && data.details.title.titleType }}</i>
+						<b class="rating" v-if="data.details.ratings.canRate">
+							{{ data.details.ratings && data.details.ratings.rating }}
+						</b>
+					</p>
+					<p>
+						<b>Year:</b> {{ data.details.title && data.details.title.year }}
+						<br>
+						<b>Release Date:</b> {{ reverseDate(data.details.releaseDate) }}
+					</p>
+					<ul class="genres">
+						<li v-for="genre in data.details.genres" :key="genre">{{ genre }}</li>
+					</ul>
+					<h2>Plot:</h2>
+					<p><b>Small plot:</b> {{ data.details.plotOutline && data.details.plotOutline.text }}</p>
+					<p class="mt-2">{{ data.details.plotSummary && data.details.plotSummary.text }}</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="js/main.js"></script>
+</body>
+</html>
