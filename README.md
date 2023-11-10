@@ -5,7 +5,7 @@ Search Movies and Series
 ## Table of contents
 
 - [Overview](#overview)
-- [Process](#my-process)
+- [Process](#process)
   - [Built with](#built-with)
   - [Structure of the project](#structure-of-the-project)
   - [Useful resources](#useful-resources)
